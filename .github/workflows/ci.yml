@@ -1,61 +1,73 @@
-name: Android Tests
+name: Build Android APK
 
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-
-env:
-  UNIT_TESTS: "true"
+  workflow_dispatch:
 
 jobs:
-  unit_test:
-    name: Build and Test
+  build:
+    name: Build Gem Android
     runs-on: ubuntu-latest
 
+    env:
+      JAVA_VERSION: "17"
+      ANDROID_API_LEVEL: "34"
+      NDK_VERSION: "28.0.12433566"
+
     steps:
-      - name: Checkout
+      # 1. Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Enable KVM
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Set up JDK 17
+      # 2. JDK 17
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: "17"
           distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
 
+      # 3. Установка Android SDK / platform-tools
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install just
-        run: cargo install just
-
-      - name: Setup NDK
-        run: just install-ndk
-
-      - name: Gradle cache
+      # 4. Кеш Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build tests
-        run: just build-test
-        env:
-          GPR_USERNAME: ${{ github.actor }}
-          GPR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 5. Setup just
+      - name: Install just
+        uses: extractions/setup-just@v2
 
-      - name: Run tests
-        uses: reactivecircus/android-emulator-runner@v2
+      # 6. Установка NDK (нужно для Rust-модулей Gem Wallet)
+      - name: Install NDK
+        run: |
+          sdkmanager --install "ndk;${NDK_VERSION}"
+          ls -la $ANDROID_HOME/ndk/
+
+      # 7. Bootstrap зависимостей проекта
+      - name: Prepare project
+        run: just bootstrap
+
+      # 8. Сборка Release APK
+      - name: Build Release APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      # 9. Сборка Debug APK (по желанию, можно удалить)
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      # 10. Загрузка артефактов APK
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
         with:
-          api-level: 29
-          arch: x86_64
-          script: just test
+          name: gem-android-apk
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
