@@ -50,63 +50,31 @@ android {
     }
 
     productFlavors {
-        create("google") {
-            dimension = channelDimension
-            isDefault = true
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"https://play.google.com/store/apps/details?id=com.gemwallet.android\"")
-        }
+        create("google") { dimension = channelDimension }
+        create("fdroid") { dimension = channelDimension }
+        create("huawei") { dimension = channelDimension }
+        create("solana") { dimension = channelDimension }
+        create("universal") { dimension = channelDimension }
+        create("samsung") { dimension = channelDimension }
+    }
 
-        create("fdroid") {
-            dimension = channelDimension
-            buildConfigField("String", "UPDATE_URL", "\"\"")
-        }
-        create("huawei") {
-            dimension = channelDimension
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
+    // **Отключаем все flavor кроме universal**
+    androidComponents {
+        onVariants(selector().all()) { variant ->
+            if (!variant.flavors.any { it.name == "universal" }) {
+                variant.enabled = false
             }
-            buildConfigField("String", "UPDATE_URL", "\"https://appgallery.huawei.com/app/C109713129\"")
-        }
-        create("solana") {
-            dimension = channelDimension
-            ndk {
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"solanadappstore://details?id=com.gemwallet.android\"")
-        }
-        create("universal") {
-            dimension = channelDimension
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"https://apk.gemwallet.com/gem_wallet_latest.apk\"")
-        }
-        create("samsung") {
-            dimension = channelDimension
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"https://apps.samsung.com/appquery/appDetail.as?appId=com.gemwallet.android\"")
         }
     }
 
     signingConfigs {
         create("release") {
-            // Priority: explicit filename env -> decoded base64 -> default "release.keystore"
-            val b64 = System.getenv("ANDROID_KEYSTORE_BASE64")
-            val storeFileFromEnv = System.getenv("ANDROID_KEYSTORE_FILENAME")
+            val b64 = System.getenv("KEYSTORE_BASE64")
+            val storeFileFromEnv = System.getenv("KEYSTORE_FILENAME")
             val keystoreFile: File = when {
                 !storeFileFromEnv.isNullOrBlank() -> file(storeFileFromEnv)
                 !b64.isNullOrBlank() -> {
                     val out = rootProject.file("release.keystore")
-                    // decode base64 and write bytes
                     out.writeBytes(Base64.getDecoder().decode(b64))
                     out
                 }
@@ -114,9 +82,9 @@ android {
             }
 
             storeFile = keystoreFile
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("ANDROID_KEYSTORE_ALIAS")
-            keyPassword = System.getenv("ANDROID_KEYSTORE_ALIAS_PASSWORD")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_ALIAS_PASSWORD")
             enableV1Signing = true
             enableV2Signing = true
         }
@@ -154,19 +122,11 @@ android {
             isShrinkResources = true
             isDebuggable = false
 
-            // If env FLAVOR == fdroid or SKIP_SIGN == "true" -> don't sign
             val skipSign = System.getenv("SKIP_SIGN") == "true"
             val flavorEnv = System.getenv("FLAVOR")?.lowercase()
-            if (skipSign || flavorEnv == "fdroid") {
-                signingConfig = null
-            } else {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = if (skipSign || flavorEnv == "fdroid") null else signingConfigs.getByName("release")
         }
     }
-
-    // NOTE: removed androidComponents block that attempted to access variant.packaging.signingConfig
-    // because that API isn't available in this AGP/Kotlin DSL combination and caused compile errors.
 
     packaging {
         resources {
@@ -176,6 +136,7 @@ android {
             excludes += "/META-INF/LICENSE.md"
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
+        jniLibs { useLegacyPackaging = true }
     }
 
     compileOptions {
@@ -188,26 +149,17 @@ android {
             freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
         }
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
     }
-    packaging {
-        jniLibs {
-            useLegacyPackaging = true
-        }
-    }
-    kapt {
-        correctErrorTypes = true
-    }
 
-    androidResources {
-        generateLocaleConfig = true
-    }
+    kapt { correctErrorTypes = true }
 
-    room {
-        schemaDirectory("$projectDir/schemas")
-    }
+    androidResources { generateLocaleConfig = true }
+
+    room { schemaDirectory("$projectDir/schemas") }
 
     lint {
         disable += "Instantiatable"
@@ -272,47 +224,23 @@ dependencies {
     implementation(project(":features:assets:viewmodels"))
 
     implementation(libs.ktx.core)
-
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.savedstate)
-
     implementation(libs.compose.navigation)
     implementation(libs.kotlinx.serialization.json)
-
-    // EncryptedPreferences
     implementation(libs.androidx.security.crypto)
-    // Auth
     implementation(libs.androidx.biometric)
-    // Chart
     implementation(libs.vico.m3)
-
     implementation(libs.reorderable)
 
-    // Google Play
-    "googleImplementation"(project(":flavors:fcm"))
-    "googleImplementation"(project(":flavors:google-review"))
-    // Solana Store
-    "solanaImplementation"(project(":flavors:fcm"))
-    "solanaImplementation"(project(":flavors:review-stub"))
-    // Universal
+    // Universal only
     "universalImplementation"(project(":flavors:fcm"))
     "universalImplementation"(project(":flavors:google-review"))
-    // Samsung
-    "samsungImplementation"(project(":flavors:fcm"))
-    "samsungImplementation"(project(":flavors:review-stub"))
-    // huawei
-    "huaweiImplementation"(project(":flavors:pushes-stub"))
-    "huaweiImplementation"(project(":flavors:review-stub"))
-    // fdroid
-    "fdroidImplementation"(project(":flavors:pushes-stub"))
-    "fdroidImplementation"(project(":flavors:review-stub"))
 
-    // Preview
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.ui.tooling.preview)
 
