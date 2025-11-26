@@ -1,74 +1,82 @@
-name: Build APK
+name: Build Android APK
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build Gem Android
     runs-on: ubuntu-latest
+
     env:
-      GPR_USERNAME: ${{ secrets.GPR_USERNAME }}
-      GPR_TOKEN: ${{ secrets.GPR_TOKEN }}
+      JAVA_VERSION: "17"
+      ANDROID_API_LEVEL: "34"
+      NDK_VERSION: "28.0.12433566"
 
     steps:
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
 
-      - name: Set up JDK 17
+      # 2. Set up JDK 17
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: 17
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v2
-        with:
-          api-level: 34
-          ndk-version: 28.0.12433566
-          build-tools: 34.0.0
+      # 3. Setup Android SDK / platform-tools
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper/
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-${{ runner.os }}-
+      # 4. Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Configure GitHub Packages for Gradle
+      # 5. Install Just
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      # 6. Install Rust manually (до bootstrap)
+      - name: Install Rust
         run: |
-          mkdir -p ~/.gradle
-          cat <<EOF > ~/.gradle/init.gradle
-          allprojects {
-              repositories {
-                  maven {
-                      url = uri('https://maven.pkg.github.com/trustwallet/wallet-core')
-                      credentials {
-                          username = System.getenv("GPR_USERNAME")
-                          password = System.getenv("GPR_TOKEN")
-                      }
-                  }
-                  maven {
-                      url = uri('https://maven.pkg.github.com/gemwalletcom/core')
-                      credentials {
-                          username = System.getenv("GPR_USERNAME")
-                          password = System.getenv("GPR_TOKEN")
-                      }
-                  }
-                  google()
-                  mavenCentral()
-              }
-          }
-          EOF
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $GITHUB_ENV
 
-      - name: Make Gradlew executable
-        run: chmod +x ./gradlew
+      # 7. Install NDK (для Rust-модулей)
+      - name: Install NDK
+        run: |
+          sdkmanager --install "ndk;${NDK_VERSION}"
+          ls -la $ANDROID_HOME/ndk/
 
-      - name: Assemble Release APK
-        run: ./gradlew assembleRelease --no-daemon
+      # 8. Bootstrap project с SKIP_RUST
+      - name: Bootstrap project
+        run: |
+          export SKIP_RUST=1
+          just bootstrap
+        shell: bash
+
+      # 9. Build Release APK
+      - name: Build Release APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      # 10. Build Debug APK
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      # 11. Upload APK artifacts
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gem-android-apk
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
