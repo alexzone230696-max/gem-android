@@ -1,78 +1,45 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Gem Android
     runs-on: ubuntu-latest
 
-    env:
-      JAVA_VERSION: "17"
-      ANDROID_API_LEVEL: "34"
-      NDK_VERSION: "28.0.12433566"
-
     steps:
-      # 1. Checkout
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
 
-      # 2. JDK 17
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          java-version: 17
 
-      # 3. Установка Android SDK / platform-tools
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # 4. Кеш Gradle
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      # 5. Setup just
       - name: Install just
-        uses: extractions/setup-just@v2
-
-      # 6. Установка Rust (ОБЯЗАТЕЛЬНО)
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      # 7. Установка NDK (для Rust-модулей gem-android)
-      - name: Install NDK
         run: |
-          sdkmanager --install "ndk;${NDK_VERSION}"
-          ls -la $ANDROID_HOME/ndk/
+          sudo snap install just --classic
 
-      # 8. Bootstrap зависимостей проекта
-      - name: Prepare project
-        run: SKIP_RUST=1 just bootstrap
-        shell: bash
-
-      # 9. Сборка Release APK
-      - name: Build Release APK
+      # ⛔ Oтключаем Rust
+      - name: Bootstrap project (without rust)
         run: |
-          chmod +x ./gradlew
-          ./gradlew assembleRelease --no-daemon
+          SKIP_RUST=1 bash -lc "just bootstrap"
 
-      # 10. Сборка Debug APK
-      - name: Build Debug APK
+      - name: Make debug APK
         run: ./gradlew assembleDebug --no-daemon
 
-      # 11. Загрузка артефактов APK
-      - name: Upload APK artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: gem-android-apk
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
+          name: gem-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
