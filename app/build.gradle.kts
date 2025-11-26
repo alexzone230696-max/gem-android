@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.util.Base64
+import java.io.File
 
 plugins {
     id("com.android.application")
@@ -46,6 +48,7 @@ android {
             }
         }
     }
+
     productFlavors {
         create("google") {
             dimension = channelDimension
@@ -93,14 +96,30 @@ android {
             buildConfigField("String", "UPDATE_URL", "\"https://apps.samsung.com/appquery/appDetail.as?appId=com.gemwallet.android\"")
         }
     }
+
     signingConfigs {
         create("release") {
-            keyAlias = System.getenv("ANDROID_KEYSTORE_ALIAS")
-            keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            storeFile = file(System.getenv("ANDROID_KEYSTORE_FILENAME") ?: "release.keystore")
+            // Priority: explicit filename env -> decoded base64 -> default "release.keystore"
+            val explicitFilename = System.getenv("ANDROID_KEYSTORE_FILENAME")
+            val b64 = System.getenv("ANDROID_KEYSTORE_BASE64")
+            val storeFileFromEnv = System.getenv("ANDROID_KEYSTORE_FILENAME")
+            val keystoreFile: File = when {
+                !storeFileFromEnv.isNullOrBlank() -> file(storeFileFromEnv)
+                !b64.isNullOrBlank() -> {
+                    val out = rootProject.file("release.keystore")
+                    // decode base64 and write bytes
+                    out.writeBytes(Base64.getDecoder().decode(b64))
+                    out
+                }
+                else -> file("release.keystore")
+            }
+
+            storeFile = keystoreFile
             storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("ANDROID_KEYSTORE_ALIAS")
+            keyPassword = System.getenv("ANDROID_KEYSTORE_ALIAS_PASSWORD")
             enableV1Signing = true
-            enableV2Signing  = true
+            enableV2Signing = true
         }
     }
 
@@ -135,13 +154,30 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false
-            if (System.getenv("SKIP_SIGN") == "true") {
+
+            // If env FLAVOR == fdroid or SKIP_SIGN == "true" -> don't sign
+            val skipSign = System.getenv("SKIP_SIGN") == "true"
+            val flavorEnv = System.getenv("FLAVOR")?.lowercase()
+            if (skipSign || flavorEnv == "fdroid") {
                 signingConfig = null
             } else {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+    }
 
+    // Ensure fdroid variants are unsigned via Android Components API (AGP 7+)
+    // This complements the buildType check above and covers cases when FLAVOR env is not set.
+    androidComponents {
+        // remove signing for variants that include the 'fdroid' flavor in the 'channel' dimension
+        onVariants(selector().withFlavor("channel" to "fdroid")) { variant ->
+            // setting packaging.signingConfig to null ensures no signing is applied
+            try {
+                variant.packaging.signingConfig = null
+            } catch (_: Throwable) {
+                // in case API differs across AGP versions, ignore
+            }
+        }
     }
 
     packaging {
@@ -268,8 +304,6 @@ dependencies {
     implementation(libs.vico.m3)
 
     implementation(libs.reorderable)
-
-//    implementation ("io.github.ehsannarmani:compose-charts:0.1.7")
 
     // Google Play
     "googleImplementation"(project(":flavors:fcm"))
