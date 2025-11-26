@@ -43,11 +43,11 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v2
 
-      # 6. Установка Rust заранее (до bootstrap)
+      # 6. Установка Rust вручную (до bootstrap)
       - name: Install Rust
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
+          echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $GITHUB_ENV
 
       # 7. Установка NDK (для Rust-модулей)
       - name: Install NDK
@@ -55,9 +55,9 @@ jobs:
           sdkmanager --install "ndk;${NDK_VERSION}"
           ls -la $ANDROID_HOME/ndk/
 
-      # 8. Bootstrap проекта (SKIP_RUST=1 отключает внутренний install-rust)
+      # 8. Bootstrap проекта (bash + Rust уже установлен)
       - name: Prepare project
-        run: SKIP_RUST=1 just bootstrap
+        run: just bootstrap
         shell: bash
 
       # 9. Сборка Release APK
