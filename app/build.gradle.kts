@@ -100,7 +100,6 @@ android {
     signingConfigs {
         create("release") {
             // Priority: explicit filename env -> decoded base64 -> default "release.keystore"
-            val explicitFilename = System.getenv("ANDROID_KEYSTORE_FILENAME")
             val b64 = System.getenv("ANDROID_KEYSTORE_BASE64")
             val storeFileFromEnv = System.getenv("ANDROID_KEYSTORE_FILENAME")
             val keystoreFile: File = when {
@@ -166,19 +165,8 @@ android {
         }
     }
 
-    // Ensure fdroid variants are unsigned via Android Components API (AGP 7+)
-    // This complements the buildType check above and covers cases when FLAVOR env is not set.
-    androidComponents {
-        // remove signing for variants that include the 'fdroid' flavor in the 'channel' dimension
-        onVariants(selector().withFlavor("channel" to "fdroid")) { variant ->
-            // setting packaging.signingConfig to null ensures no signing is applied
-            try {
-                variant.packaging.signingConfig = null
-            } catch (_: Throwable) {
-                // in case API differs across AGP versions, ignore
-            }
-        }
-    }
+    // NOTE: removed androidComponents block that attempted to access variant.packaging.signingConfig
+    // because that API isn't available in this AGP/Kotlin DSL combination and caused compile errors.
 
     packaging {
         resources {
