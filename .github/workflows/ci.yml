@@ -20,9 +20,9 @@ jobs:
     steps:
       # 1. Checkout
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+      uses: actions/checkout@v4
+      with:
+        submodules: true
 
       # 2. JDK 17
       - name: Set up JDK
@@ -43,28 +43,33 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v2
 
-      # 6. Установка NDK (нужно для Rust-модулей Gem Wallet)
+      # 6. Установка Rust (ОБЯЗАТЕЛЬНО)
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # 7. Установка NDK (для Rust-модулей gem-android)
       - name: Install NDK
         run: |
           sdkmanager --install "ndk;${NDK_VERSION}"
           ls -la $ANDROID_HOME/ndk/
 
-      # 7. Bootstrap зависимостей проекта
+      # 8. Bootstrap зависимостей проекта
+      # SKIP_RUST=1 — отключает падение install-rust внутри justfile
       - name: Prepare project
-        run: just bootstrap
+        run: SKIP_RUST=1 just bootstrap
         shell: bash
 
-      # 8. Сборка Release APK
+      # 9. Сборка Release APK
       - name: Build Release APK
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease --no-daemon
 
-      # 9. Сборка Debug APK (по желанию, можно удалить)
+      # 10. Сборка Debug APK (по желанию)
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
 
-      # 10. Загрузка артефактов APK
+      # 11. Загрузка артефактов APK
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
