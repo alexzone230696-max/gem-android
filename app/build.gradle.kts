@@ -36,9 +36,7 @@ android {
         versionName = System.getenv("BUILD_VERSION") ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables { useSupportLibrary = true }
 
         splits {
             abi {
@@ -56,15 +54,6 @@ android {
         create("solana") { dimension = channelDimension }
         create("universal") { dimension = channelDimension }
         create("samsung") { dimension = channelDimension }
-    }
-
-    // **Отключаем все flavor кроме universal**
-    androidComponents {
-        onVariants(selector().all()) { variant ->
-            if (!variant.flavors.any { it.name == "universal" }) {
-                variant.enabled = false
-            }
-        }
     }
 
     signingConfigs {
@@ -143,6 +132,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     tasks.withType<KotlinJvmCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
@@ -156,15 +146,22 @@ android {
     }
 
     kapt { correctErrorTypes = true }
-
     androidResources { generateLocaleConfig = true }
-
     room { schemaDirectory("$projectDir/schemas") }
 
     lint {
         disable += "Instantiatable"
         checkGeneratedSources = true
         checkDependencies = true
+    }
+}
+
+// **Фильтруем задачи сборки, чтобы собирать только universal**
+tasks.whenTaskAdded {
+    if ((name.contains("assemble", ignoreCase = true) || name.contains("bundle", ignoreCase = true)) &&
+        !name.lowercase().contains("universal")
+    ) {
+        enabled = false
     }
 }
 
