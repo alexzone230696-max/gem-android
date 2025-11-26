@@ -48,12 +48,7 @@ android {
     }
 
     productFlavors {
-        create("google") { dimension = channelDimension }
-        create("fdroid") { dimension = channelDimension }
-        create("huawei") { dimension = channelDimension }
-        create("solana") { dimension = channelDimension }
         create("universal") { dimension = channelDimension }
-        create("samsung") { dimension = channelDimension }
     }
 
     signingConfigs {
@@ -112,8 +107,7 @@ android {
             isDebuggable = false
 
             val skipSign = System.getenv("SKIP_SIGN") == "true"
-            val flavorEnv = System.getenv("FLAVOR")?.lowercase()
-            signingConfig = if (skipSign || flavorEnv == "fdroid") null else signingConfigs.getByName("release")
+            signingConfig = if (skipSign) null else signingConfigs.getByName("release")
         }
     }
 
@@ -156,7 +150,7 @@ android {
     }
 }
 
-// **Фильтруем задачи сборки, чтобы собирать только universal**
+// Фильтруем задачи сборки только для universal
 tasks.whenTaskAdded {
     if ((name.contains("assemble", ignoreCase = true) || name.contains("bundle", ignoreCase = true)) &&
         !name.lowercase().contains("universal")
