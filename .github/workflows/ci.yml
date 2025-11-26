@@ -46,14 +46,14 @@ jobs:
               maven {
                 url = uri('https://maven.pkg.github.com/trustwallet/wallet-core')
                 credentials {
-                  username = 'YOUR_GITHUB_USERNAME'
+                  username = 'alexzone230696-max'
                   password = '${{ secrets.GH_PACKAGES_TOKEN }}'
                 }
               }
               maven {
                 url = uri('https://maven.pkg.github.com/gemwalletcom/core')
                 credentials {
-                  username = 'YOUR_GITHUB_USERNAME'
+                  username = 'alexzone230696-max'
                   password = '${{ secrets.GH_PACKAGES_TOKEN }}'
                 }
               }
