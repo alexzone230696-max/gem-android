@@ -20,9 +20,9 @@ jobs:
     steps:
       # 1. Checkout
       - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: true
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
       # 2. JDK 17
       - name: Set up JDK
@@ -54,7 +54,6 @@ jobs:
           ls -la $ANDROID_HOME/ndk/
 
       # 8. Bootstrap зависимостей проекта
-      # SKIP_RUST=1 — отключает падение install-rust внутри justfile
       - name: Prepare project
         run: SKIP_RUST=1 just bootstrap
         shell: bash
@@ -65,7 +64,7 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleRelease --no-daemon
 
-      # 10. Сборка Debug APK (по желанию)
+      # 10. Сборка Debug APK
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
 
