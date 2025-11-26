@@ -43,34 +43,36 @@ jobs:
       - name: Install just
         uses: extractions/setup-just@v2
 
-      # 6. Установка Rust вручную (до bootstrap)
+      # 6. Install Rust manually (до bootstrap)
       - name: Install Rust
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $GITHUB_ENV
 
-      # 7. Установка NDK (для Rust-модулей)
+      # 7. Install NDK (для Rust-модулей)
       - name: Install NDK
         run: |
           sdkmanager --install "ndk;${NDK_VERSION}"
           ls -la $ANDROID_HOME/ndk/
 
-      # 8. Bootstrap проекта (bash + Rust уже установлен)
-      - name: Prepare project
-        run: just bootstrap
+      # 8. Bootstrap project с SKIP_RUST
+      - name: Bootstrap project
+        run: |
+          export SKIP_RUST=1
+          just bootstrap
         shell: bash
 
-      # 9. Сборка Release APK
+      # 9. Build Release APK
       - name: Build Release APK
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease --no-daemon
 
-      # 10. Сборка Debug APK
+      # 10. Build Debug APK
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
 
-      # 11. Загрузка артефактов APK
+      # 11. Upload APK artifacts
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
