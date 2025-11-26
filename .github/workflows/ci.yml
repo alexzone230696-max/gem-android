@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GPR_USERNAME: ${{ secrets.GPR_USERNAME }}
+      GPR_TOKEN: ${{ secrets.GPR_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -41,26 +44,28 @@ jobs:
       - name: Configure GitHub Packages for Gradle
         run: |
           mkdir -p ~/.gradle
-          echo "allprojects {
-            repositories {
-              maven {
-                url = uri('https://maven.pkg.github.com/trustwallet/wallet-core')
-                credentials {
-                  username = 'alexzone230696-max'
-                  password = '${{ secrets.GH_PACKAGES_TOKEN }}'
-                }
+          cat <<EOF > ~/.gradle/init.gradle
+          allprojects {
+              repositories {
+                  maven {
+                      url = uri('https://maven.pkg.github.com/trustwallet/wallet-core')
+                      credentials {
+                          username = System.getenv("GPR_USERNAME")
+                          password = System.getenv("GPR_TOKEN")
+                      }
+                  }
+                  maven {
+                      url = uri('https://maven.pkg.github.com/gemwalletcom/core')
+                      credentials {
+                          username = System.getenv("GPR_USERNAME")
+                          password = System.getenv("GPR_TOKEN")
+                      }
+                  }
+                  google()
+                  mavenCentral()
               }
-              maven {
-                url = uri('https://maven.pkg.github.com/gemwalletcom/core')
-                credentials {
-                  username = 'alexzone230696-max'
-                  password = '${{ secrets.GH_PACKAGES_TOKEN }}'
-                }
-              }
-              google()
-              mavenCentral()
-            }
-          }" > ~/.gradle/init.gradle
+          }
+          EOF
 
       - name: Make Gradlew executable
         run: chmod +x ./gradlew
