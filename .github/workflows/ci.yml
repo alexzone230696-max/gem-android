@@ -9,22 +9,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     env:
       GPR_USERNAME: ${{ secrets.GPR_USERNAME }}
       GPR_TOKEN: ${{ secrets.GPR_TOKEN }}
 
     steps:
+      # --- Checkout ---
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
+      # --- JDK ---
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: 17
 
+      # --- Android SDK ---
       - name: Set up Android SDK
         uses: android-actions/setup-android@v2
         with:
@@ -32,6 +36,7 @@ jobs:
           ndk-version: 28.0.12433566
           build-tools: 34.0.0
 
+      # --- Gradle Cache ---
       - name: Cache Gradle packages
         uses: actions/cache@v3
         with:
@@ -41,6 +46,22 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
 
+      # --- Restore keystore from Base64 ---
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+
+      # --- Gradle signing config ---
+      - name: Create signing.properties
+        run: |
+          cat <<EOF > ./signing.properties
+          storeFile=release.keystore
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_ALIAS_PASSWORD }}
+          EOF
+
+      # --- Configure GitHub Packages ---
       - name: Configure GitHub Packages for Gradle
         run: |
           mkdir -p ~/.gradle
@@ -67,8 +88,10 @@ jobs:
           }
           EOF
 
+      # --- Permissions ---
       - name: Make Gradlew executable
         run: chmod +x ./gradlew
 
+      # --- Build ---
       - name: Assemble Release APK
         run: ./gradlew assembleRelease --no-daemon
