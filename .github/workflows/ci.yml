@@ -52,6 +52,7 @@ jobs:
       # 7. Bootstrap зависимостей проекта
       - name: Prepare project
         run: just bootstrap
+        shell: bash
 
       # 8. Сборка Release APK
       - name: Build Release APK
