@@ -42,7 +42,7 @@ android {
             abi {
                 isEnable = false
                 include("arm64-v8a", "armeabi-v7a")
-                isUniversalApk = false
+                isUniversalApk = true
             }
         }
     }
@@ -64,19 +64,8 @@ android {
 
     signingConfigs {
         create("release") {
-            val b64 = System.getenv("KEYSTORE_BASE64")
-            val storeFileFromEnv = System.getenv("KEYSTORE_FILENAME")
-            val keystoreFile: File = when {
-                !storeFileFromEnv.isNullOrBlank() -> file(storeFileFromEnv)
-                !b64.isNullOrBlank() -> {
-                    val out = rootProject.file("release.keystore")
-                    out.writeBytes(Base64.getDecoder().decode(b64))
-                    out
-                }
-                else -> file("release.keystore")
-            }
-
-            storeFile = keystoreFile
+            val keystorePath: String? = System.getenv("KEYSTORE_FILE") ?: "release.keystore"
+            storeFile = file(keystorePath)
             storePassword = System.getenv("KEYSTORE_PASSWORD")
             keyAlias = System.getenv("KEY_ALIAS")
             keyPassword = System.getenv("KEY_ALIAS_PASSWORD")
