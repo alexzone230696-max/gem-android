@@ -48,54 +48,17 @@ android {
     }
 
     productFlavors {
-        create("google") {
-            dimension = channelDimension
-            isDefault = true
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"https://play.google.com/store/apps/details?id=com.gemwallet.android\"")
-        }
-
-        create("fdroid") {
-            dimension = channelDimension
-            buildConfigField("String", "UPDATE_URL", "\"\"")
-        }
-
-        create("huawei") {
-            dimension = channelDimension
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"https://appgallery.huawei.com/app/C109713129\"")
-        }
-
-        create("solana") {
-            dimension = channelDimension
-            ndk {
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"solanadappstore://details?id=com.gemwallet.android\"")
-        }
-
         create("universal") {
             dimension = channelDimension
             ndk {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")
             }
-            buildConfigField("String", "UPDATE_URL", "\"https://apk.gemwallet.com/gem_wallet_latest.apk\"")
-        }
-
-        create("samsung") {
-            dimension = channelDimension
-            ndk {
-                abiFilters.add("armeabi-v7a")
-                abiFilters.add("arm64-v8a")
-            }
-            buildConfigField("String", "UPDATE_URL", "\"https://apps.samsung.com/appquery/appDetail.as?appId=com.gemwallet.android\"")
+            buildConfigField(
+                "String",
+                "UPDATE_URL",
+                "\"https://apk.gemwallet.com/gem_wallet_latest.apk\""
+            )
         }
     }
 
@@ -235,18 +198,9 @@ dependencies {
     implementation(libs.vico.m3)
     implementation(libs.reorderable)
 
-    // Flavor-specific dependencies
-    "googleImplementation"(project(":flavors:fcm"))
-    "googleImplementation"(project(":flavors:google-review"))
-
+    // Universal flavor only
     "universalImplementation"(project(":flavors:fcm"))
     "universalImplementation"(project(":flavors:google-review"))
-
-    "huaweiImplementation"(project(":flavors:huawei-push"))
-    "samsungImplementation"(project(":flavors:samsung-review"))
-
-    // FDroid — без пушей и reviewManager
-    // "fdroidImplementation" — не подключаем ничего
 
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.ui.tooling.preview)
