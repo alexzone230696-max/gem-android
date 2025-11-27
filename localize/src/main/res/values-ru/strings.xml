@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="common.cancel">Отмена</string>
-  <string name="welcome.title">Добро пожаловать в Gem семью</string>
+  <string name="welcome.title">Добро пожаловать в Lumine семью</string>
   <string name="common.done">Готово</string>
   <string name="wallet.create_new_wallet">Создать новый кошелек</string>
   <string name="wallet.import_existing_wallet">Импорт существующего кошелька</string>
