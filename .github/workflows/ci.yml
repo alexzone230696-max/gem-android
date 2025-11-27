@@ -98,3 +98,10 @@ jobs:
       # --- Build ---
       - name: Assemble Release APK
         run: ./gradlew assembleRelease --no-daemon -Pandroid.injected.signing.store.file=release.keystore -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_ALIAS_PASSWORD }}
+
+      # --- Upload APK as artifact ---
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
