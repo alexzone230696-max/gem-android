@@ -32,17 +32,16 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF2D5BE6),
-    secondary = Color(0xFF999999), //Color(0xFF818181),
-    tertiary = Color(0xFF1B9A6D),
-    background = Color(0xFFFFFFFF),
-    surface = Color(0xFFF0F0F5),
-//    onPrimary = Color.White,
-//    onSecondary = Color.White,
-//    onTertiary = Color.White,
-    onBackground = Color(0xFF1A191A),
-    onSurface = Color(0xFF1C1B1F),
+    secondary = Color(0xFF808d99), //Color(0xFF818181),
+    tertiary = Color(0xFF06BE92),
+    background = Color(0xFF24262A),
+    surface = Color(0xFF1A191A),
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.White,
+    onBackground = Color(0xFF818181),
     error = Color(0xFFF84E4E),
-    scrim = Color(0xffededed),//from #f2f2f2
+    scrim = Color(0xff34373d), // Header button actions color
 )
 
 @Composable
