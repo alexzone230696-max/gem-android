@@ -99,14 +99,16 @@ jobs:
       - name: Assemble Release APK
         run: ./gradlew assembleRelease --no-daemon -Pandroid.injected.signing.store.file=release.keystore -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_ALIAS_PASSWORD }}
 
-      # --- List APKs for debug ---
-      - name: List APKs
-        run: ls -R app/build/outputs/apk/release/
+      # --- List all APKs safely ---
+      - name: List all APKs
+        run: |
+          echo "APK files in build outputs:"
+          find app/build/outputs/apk/ -name "*.apk"
 
-      # --- Upload APK as artifact ---
-      - name: Upload Release APK
+      # --- Upload all APKs as artifact ---
+      - name: Upload Release APKs
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/**/*.apk
           if-no-files-found: warn
