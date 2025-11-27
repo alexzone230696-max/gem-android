@@ -48,7 +48,55 @@ android {
     }
 
     productFlavors {
-        create("universal") { dimension = channelDimension }
+        create("google") {
+            dimension = channelDimension
+            isDefault = true
+            ndk {
+                abiFilters.add("armeabi-v7a")
+                abiFilters.add("arm64-v8a")
+            }
+            buildConfigField("String", "UPDATE_URL", "\"https://play.google.com/store/apps/details?id=com.gemwallet.android\"")
+        }
+
+        create("fdroid") {
+            dimension = channelDimension
+            buildConfigField("String", "UPDATE_URL", "\"\"")
+        }
+
+        create("huawei") {
+            dimension = channelDimension
+            ndk {
+                abiFilters.add("armeabi-v7a")
+                abiFilters.add("arm64-v8a")
+            }
+            buildConfigField("String", "UPDATE_URL", "\"https://appgallery.huawei.com/app/C109713129\"")
+        }
+
+        create("solana") {
+            dimension = channelDimension
+            ndk {
+                abiFilters.add("arm64-v8a")
+            }
+            buildConfigField("String", "UPDATE_URL", "\"solanadappstore://details?id=com.gemwallet.android\"")
+        }
+
+        create("universal") {
+            dimension = channelDimension
+            ndk {
+                abiFilters.add("armeabi-v7a")
+                abiFilters.add("arm64-v8a")
+            }
+            buildConfigField("String", "UPDATE_URL", "\"https://apk.gemwallet.com/gem_wallet_latest.apk\"")
+        }
+
+        create("samsung") {
+            dimension = channelDimension
+            ndk {
+                abiFilters.add("armeabi-v7a")
+                abiFilters.add("arm64-v8a")
+            }
+            buildConfigField("String", "UPDATE_URL", "\"https://apps.samsung.com/appquery/appDetail.as?appId=com.gemwallet.android\"")
+        }
     }
 
     signingConfigs {
@@ -79,25 +127,6 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             isDebuggable = true
-
-            if (System.getenv("UNIT_TESTS") == "true") {
-                ndk {
-                    abiFilters.remove("arm64-v8a")
-                    abiFilters.remove("armeabi-v7a")
-                    abiFilters.add("x86_64")
-                }
-
-                splits {
-                    abi {
-                        reset()
-                        isEnable = false
-                        include("x86_64")
-                        isUniversalApk = false
-                    }
-                }
-            }
-
-            buildConfigField("String", "TEST_PHRASE", "${System.getenv("TEST_PHRASE")}")
         }
 
         getByName("release") {
@@ -105,21 +134,8 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false
-
-            val skipSign = System.getenv("SKIP_SIGN") == "true"
-            signingConfig = if (skipSign) null else signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
         }
-    }
-
-    packaging {
-        resources {
-            excludes += "META-INF/*"
-            excludes += "META-INF/DEPENDENCIES"
-            excludes += "/META-INF/LICENSE-notice.md"
-            excludes += "/META-INF/LICENSE.md"
-            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
-        }
-        jniLibs { useLegacyPackaging = true }
     }
 
     compileOptions {
@@ -147,15 +163,6 @@ android {
         disable += "Instantiatable"
         checkGeneratedSources = true
         checkDependencies = true
-    }
-}
-
-// Фильтруем задачи сборки только для universal
-tasks.whenTaskAdded {
-    if ((name.contains("assemble", ignoreCase = true) || name.contains("bundle", ignoreCase = true)) &&
-        !name.lowercase().contains("universal")
-    ) {
-        enabled = false
     }
 }
 
