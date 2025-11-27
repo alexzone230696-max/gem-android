@@ -235,9 +235,18 @@ dependencies {
     implementation(libs.vico.m3)
     implementation(libs.reorderable)
 
-    // Universal only
+    // Flavor-specific dependencies
+    "googleImplementation"(project(":flavors:fcm"))
+    "googleImplementation"(project(":flavors:google-review"))
+
     "universalImplementation"(project(":flavors:fcm"))
     "universalImplementation"(project(":flavors:google-review"))
+
+    "huaweiImplementation"(project(":flavors:huawei-push"))
+    "samsungImplementation"(project(":flavors:samsung-review"))
+
+    // FDroid — без пушей и reviewManager
+    // "fdroidImplementation" — не подключаем ничего
 
     debugImplementation(libs.androidx.ui.tooling)
     implementation(libs.androidx.ui.tooling.preview)
