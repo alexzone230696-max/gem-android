@@ -21,7 +21,7 @@ repositories {
 }
 
 android {
-    namespace = "com.gemwallet.android"
+    namespace = "com.lumewallet.android"
     compileSdk = 36
     ndkVersion = "28.1.13356709"
 
@@ -29,11 +29,11 @@ android {
     flavorDimensions.add(channelDimension)
 
     defaultConfig {
-        applicationId = "com.gemwallet.android"
+        applicationId = "com.lumewallet.android"
         minSdk = 28
         targetSdk = 36
         versionCode = Integer.valueOf(System.getenv("BUILD_NUMBER") ?: "1")
-        versionName = System.getenv("BUILD_VERSION") ?: "1.4"
+        versionName = System.getenv("BUILD_VERSION") ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
