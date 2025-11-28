@@ -30,7 +30,7 @@ private val DarkColorScheme = darkColorScheme(
     scrim = Color(0xff34373d), // Header button actions color
 )
 
-private val LightColorScheme = private val LightColorScheme = lightColorScheme(
+private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF2D5BE6),
     secondary = Color(0xFF999999), //Color(0xFF818181),
     tertiary = Color(0xFF1B9A6D),
