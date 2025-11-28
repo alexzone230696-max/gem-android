@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="common.cancel">Отмена</string>
-  <string name="welcome.title">Добро пожаловать в Lumine семью</string>
+  <string name="welcome.title">Добро пожаловать в Lume семью</string>
   <string name="common.done">Готово</string>
   <string name="wallet.create_new_wallet">Создать новый кошелек</string>
   <string name="wallet.import_existing_wallet">Импорт существующего кошелька</string>
@@ -24,7 +24,7 @@
   <string name="wallet.new.backup_warning">Запишите свой уникальный Секретная фраза восстановления и надежно сохраните его; это необходимо для доступа к кошельку и восстановления.</string>
   <string name="common.continue">Продолжить</string>
   <string name="common.secret_phrase">Секретная фраза восстановления</string>
-  <string name="app.name">Gem</string>
+  <string name="app.name">LumeWallet</string>
   <string name="common.provider">Поставщик</string>
   <string name="wallet.new.backup_confirm_warning">Прежде чем продолжить, подтвердите, что вы записали и сохранили свой Секретная фраза восстановления в безопасном месте, так как это имеет решающее значение для будущего доступа к кошельку и его восстановления.</string>
   <string name="common.loading">Загрузка</string>
