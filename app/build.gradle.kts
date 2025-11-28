@@ -21,7 +21,7 @@ repositories {
 }
 
 android {
-    namespace = "com.lumewallet.android"
+    namespace = "com.gemwallet.android"
     compileSdk = 36
     ndkVersion = "28.1.13356709"
 
@@ -29,7 +29,7 @@ android {
     flavorDimensions.add(channelDimension)
 
     defaultConfig {
-        applicationId = "com.lumewallet.android"
+        applicationId = "com.gemwallet.android"
         minSdk = 28
         targetSdk = 36
         versionCode = Integer.valueOf(System.getenv("BUILD_NUMBER") ?: "1")
