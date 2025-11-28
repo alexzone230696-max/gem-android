@@ -33,7 +33,7 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = Integer.valueOf(System.getenv("BUILD_NUMBER") ?: "1")
-        versionName = System.getenv("BUILD_VERSION") ?: "1.0"
+        versionName = System.getenv("BUILD_VERSION") ?: "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
